@@ -1,0 +1,158 @@
+---
+title: "Assignment:Railway Data Analysis Using R Markdown"
+author: "AF/20/16855"
+date: "2025-01-04"
+output: html_document
+---
+Objective: The main objective of this assignment is analyzing a railway dataset (railway.csv) to understand key patterns and insights, practicing data cleaning, visualization, and reporting using R Markdown
+
+```{r message=FALSE,warning=FALSE,comment=""}
+```
+## File Setup
+### Load needed package
+```{r}
+library(tidyverse)
+```
+### Load the dataset
+```{r}
+#First load the railway.csv data file into R environment 
+railway <- read.csv("Data/railway.csv")
+```
+```{r}
+#View the first few rows in railway.csv to confirm
+head(railway)
+```
+```{r}
+#View the last few rows in railway.csv to confirm
+tail(railway)
+```
+
+### Ensure data format and all variables
+```{r}
+#Use this function to check the data is in the correct format and all variables are appropriately structured or not.After run this code, some columns are in categorical variables. Therefore, we have to change them as factor variables.
+str(railway)
+```
+
+
+```{r}
+#Change the categorical variables (identified) as a factor variables and again view the data set that changes are correctly made.
+railway$Purchase.Type <- as.factor(railway$Purchase.Type)
+railway$Payment.Method <- as.factor(railway$Payment.Method)
+railway$Ticket.Type <- as.factor(railway$Ticket.Type)
+railway$Journey.Status <- as.factor(railway$Journey.Status)
+railway$Reason.for.Delay <- as.factor(railway$Reason.for.Delay)
+railway$Refund.Request <- as.factor(railway$Refund.Request)
+
+str(railway)
+```
+
+## Section 01 : Data Preparation and Cleaning
+### Check for missing values
+
+```{r}
+#Check for missing values in railway.csv
+sum(is.na(railway))
+colSums(is.na(railway))
+```
+### Handling missing values 
+```{r}
+#Replacing empty stings in Reasons.for.Delay with "Unknown"
+railway <- railway %>%
+    mutate(Reason.for.Delay = ifelse(is.na(Reason.for.Delay), "Unknown", Reason.for.Delay))
+```
+
+
+### Get summary for railway dataset
+```{r}
+#Using this summary function we confirm correct data types for key columns
+summary(railway)
+```
+
+## Section 02: Understanding Key Variables
+### Summarize key variables
+```{r}
+# Create a summary table to showcase Counts for each category and distribution patterns. In other word use following code to analyze and summarize Purchase Type,Payment Method and Ticket Type)
+summary_table <- railway %>%
+  group_by(Purchase.Type, Payment.Method, Ticket.Type) %>%
+  summarise(Count = n(), Percentage = (n() / nrow(railway)) * 100, .groups = 'drop')
+
+print(summary_table)
+
+```
+
+### Visualize the behavaior of Purchase Type,Payment Method and Ticket Type 
+```{r}
+#Use bar plot for Purchase Type and it shows distribution of online purchase type is higher than the station type
+railway %>%
+  ggplot(aes(x = Purchase.Type,fill = Purchase.Type)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("Online" = "pink", "Station" = "skyblue")) +
+  labs(title = "Distribution of Purchase Types", x = "Purchase Type", y = "Count")+
+  theme_minimal()
+
+#Use bar plot for Ticket Type and it shows distribution of Advanced Ticket Type is more than both Anytime and Off-peak ticket types.
+railway %>%
+  ggplot(aes(x = Ticket.Type, fill = Ticket.Type)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("yellow", "skyblue", "lightgreen")) + # Specify custom colors
+  labs(title = "Distribution of Ticket Types",
+       x = "Ticket Type",
+       y = "Count") +
+  theme_minimal()
+
+#Use stacked bar chart for Payment Method and it shows distribution of contactless payment method is greater than other two method.
+railway %>%
+  count(Payment.Method, Purchase.Type) %>%
+  ggplot(aes(x = Payment.Method, y = n, fill = Purchase.Type)) +
+  geom_bar(stat = "identity", color = "black") +
+  labs(title = "Payment Method by Purchase Type", x = "Payment Method", y = "Count") +
+  theme_minimal()
+
+```
+
+## Section 03: Delayed Journeys Analysis
+### Filter the dataset to include only delayed journeys
+```{r}
+#After filter the filter data set there are 2292 obs in 19 variables in delayed journals.
+delayed_journeys <- railway %>%
+  filter(Journey.Status == "Delayed")
+```
+
+### Data Mutation
+```{r}
+# Add a "Day of the Week" column to delayed journeys
+delayed_journeys <- delayed_journeys %>%
+  mutate(Day.of.Week = weekdays(as.Date(Date.of.Journey)))
+
+# Add a "Day of the Week" column to railway
+railway <- railway %>%
+  mutate(Day.of.Week = weekdays(as.Date(Date.of.Journey)))
+```
+
+### Visualization
+```{r}
+#This horizontal bar chart Visualize how delays are distributed based on the Reason for Delay.
+delayed_journeys %>%
+  ggplot(aes(x = Reason.for.Delay)) +
+  geom_bar(fill = "lightgreen", color = "black") +
+  labs(title = "Reason for Delay Distribution", x = "Reason for Delay", y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  coord_flip()
+```
+```{r}
+#This Heat map visualize how delays are distributed based on the day of the week. 
+delayed_journeys %>%
+  count(Day.of.Week) %>%
+  ggplot(aes(x = Day.of.Week, y = 1, fill = n)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightyellow", high = "red", name = "Count") +
+  labs(title = "Heatmap of Delays by Day of the Week", 
+       x = "Day of the Week", 
+       y = "") +
+  theme_minimal()
+
+```
+
+## Conclusion
+The railway data analysis helped to understand patterns in ticket purchases, payment methods, and delays. It showed trends like more contactless payments and common delay reasons, giving useful ideas to improve railway services.And also easy for decission making.
+
