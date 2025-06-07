@@ -5,9 +5,13 @@ I recently completed a comprehensive data analysis project focused on railway op
 🔎 Key Aspects of the Project:
 
 ✅ Cleaned and preprocessed raw data to ensure accuracy and usability
+
 ✅ Conducted detailed exploratory data analysis with visualizations on ticket purchases and payment patterns
+
 ✅ Analyzed train delay trends across different days and causes
+
 ✅ Compiled an organized, dynamic report using R Markdown to present findings clearly
+
 
 🧰 Tools & Packages:
 
